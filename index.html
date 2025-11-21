@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProConvert - Quilting B&W Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #64748b;
+            --success: #10b981;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #475569;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            padding: 20px 30px;
+            background: var(--surface);
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            flex: 1;
+            overflow: hidden;
+            max-width: 1800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .controls-panel {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 80px);
+        }
+
+        .controls-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .controls-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .controls-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .controls-scroll::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .controls-scroll::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        .controls-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--background);
+        }
+
+        .canvas-area {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 80px);
+            overflow: hidden;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .slider-container {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .slider-value {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--surface-light);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--primary-dark);
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:hover {
+            border-color: var(--primary);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .upload-zone {
+            border: 3px dashed var(--border);
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--background);
+            margin: 40px;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .upload-hint {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .canvas-container {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .canvas-container.active {
+            display: flex;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            /* Transparency checkerboard pattern */
+            background-image: 
+                linear-gradient(45deg, #808080 25%, transparent 25%),
+                linear-gradient(-45deg, #808080 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #808080 75%),
+                linear-gradient(-45deg, transparent 75%, #808080 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: #404040;
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .info-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            padding: 15px 20px;
+            background: var(--surface);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .info-label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            width: 100%;
+            padding: 14px;
+            font-size: 1em;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-reset {
+            background: var(--surface-light);
+            color: var(--text);
+            width: 100%;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        .btn-reset:hover {
+            background: var(--border);
+            transform: translateY(-2px);
+        }
+
+        .btn-new {
+            background: var(--surface-light);
+            color: var(--text);
+            padding: 10px 20px;
+        }
+
+        .btn-new:hover {
+            background: var(--border);
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 8px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8em;
+        }
+
+        .preset-btn:hover {
+            background: var(--border);
+            border-color: var(--primary);
+        }
+
+        .advanced-toggle {
+            cursor: pointer;
+            padding: 10px;
+            background: var(--surface-light);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+
+        .advanced-toggle:hover {
+            background: var(--border);
+        }
+
+        .advanced-content {
+            display: none;
+        }
+
+        .advanced-content.active {
+            display: block;
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Quilting Palette */
+        .quilting-mode {
+            background: var(--background);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .tone-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tone-option {
+            aspect-ratio: 1;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+
+        .tone-option:hover {
+            border-color: var(--primary);
+        }
+
+        .tone-option.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .color-palette-preview {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--surface);
+            border-radius: 6px;
+        }
+
+        .palette-color {
+            flex: 1;
+            height: 40px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 280px 1fr;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>🎨 ProConvert - Quilting Edition</h1>
+                    <p class="subtitle">Black & White Converter for Quilting Patterns <span class="live-indicator"></span></p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-new" onclick="resetImage()">🔄 New Image</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <!-- Controls Panel with Scrollable Content -->
+            <aside class="controls-panel">
+                <div class="controls-scroll">
+                    <div class="control-group">
+                        <label class="control-label">🧵 Quilting Tones</label>
+                        <p style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 10px;">
+                            Select number of fabric colors for your quilt
+                        </p>
+                        <div class="tone-selector">
+                            <div class="tone-option" onclick="setQuiltTones(2)" id="tone-2">
+                                2<br><small>B&W</small>
+                            </div>
+                            <div class="tone-option" onclick="setQuiltTones(3)" id="tone-3">
+                                3
+                            </div>
+                            <div class="tone-option active" onclick="setQuiltTones(4)" id="tone-4">
+                                4
+                            </div>
+                            <div class="tone-option" onclick="setQuiltTones(5)" id="tone-5">
+                                5
+                            </div>
+                            <div class="tone-option" onclick="setQuiltTones(6)" id="tone-6">
+                                6
+                            </div>
+                            <div class="tone-option" onclick="setQuiltTones(8)" id="tone-8">
+                                8
+                            </div>
+                            <div class="tone-option" onclick="setQuiltTones(12)" id="tone-12">
+                                12
+                            </div>
+                            <div class="tone-option" onclick="setQuiltTones(16)" id="tone-16">
+                                16
+                            </div>
+                        </div>
+                        <div class="color-palette-preview" id="palettePreview"></div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Conversion Method</label>
+                        <select id="conversionMethod">
+                            <option value="luminosity">Luminosity (Recommended)</option>
+                            <option value="grayscale">Standard Grayscale</option>
+                            <option value="average">Average Method</option>
+                            <option value="desaturation">Desaturation</option>
+                            <option value="threshold">Binary Threshold</option>
+                            <option value="floyd">Floyd-Steinberg Dithering</option>
+                            <option value="atkinson">Atkinson Dithering</option>
+                            <option value="ordered">Ordered Dithering</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Basic Adjustments</label>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Brightness</span>
+                                <span class="slider-value" id="brightnessValue">0</span>
+                            </div>
+                            <input type="range" id="brightness" min="-100" max="100" value="0">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Contrast</span>
+                                <span class="slider-value" id="contrastValue">0</span>
+                            </div>
+                            <input type="range" id="contrast" min="-100" max="100" value="0">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>Threshold</span>
+                                <span class="slider-value" id="thresholdValue">128</span>
+                            </div>
+                            <input type="range" id="threshold" min="0" max="255" value="128">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="advanced-toggle" onclick="toggleAdvanced()">
+                            <span style="font-weight: 600;">Advanced Controls</span>
+                            <span id="advancedArrow">▼</span>
+                        </div>
+                        
+                        <div class="advanced-content" id="advancedContent">
+                            <div class="slider-container">
+                                <div class="slider-label">
+                                    <span>Black Point</span>
+                                    <span class="slider-value" id="blackPointValue">0</span>
+                                </div>
+                                <input type="range" id="blackPoint" min="0" max="255" value="0">
+                            </div>
+
+                            <div class="slider-container">
+                                <div class="slider-label">
+                                    <span>White Point</span>
+                                    <span class="slider-value" id="whitePointValue">255</span>
+                                </div>
+                                <input type="range" id="whitePoint" min="0" max="255" value="255">
+                            </div>
+
+                            <div class="slider-container">
+                                <div class="slider-label">
+                                    <span>Gamma</span>
+                                    <span class="slider-value" id="gammaValue">1.0</span>
+                                </div>
+                                <input type="range" id="gamma" min="0.1" max="3.0" step="0.1" value="1.0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Quick Presets</label>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="applyPreset('highContrast')">High Contrast</button>
+                            <button class="preset-btn" onclick="applyPreset('soft')">Soft</button>
+                            <button class="preset-btn" onclick="applyPreset('dramatic')">Dramatic</button>
+                            <button class="preset-btn" onclick="applyPreset('vintage')">Vintage</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fixed Footer with Download and Reset -->
+                <div class="controls-footer">
+                    <button class="btn-download" onclick="downloadImage()">
+                        💾 Download Quilt Pattern
+                    </button>
+                    <button class="btn-reset" onclick="resetSettings()">
+                        ↺ Reset All Settings
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Canvas Area -->
+            <main class="canvas-area">
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Drop your image here or click to browse</div>
+                    <div class="upload-hint">Supports JPG, PNG, WebP, BMP (Max 10MB)</div>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+
+                <div class="canvas-container" id="canvasContainer">
+                    <div class="info-bar">
+                        <div class="info-item">
+                            <div class="info-value" id="imageDimensions">-</div>
+                            <div class="info-label">Dimensions</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-value" id="fileSize">-</div>
+                            <div class="info-label">File Size</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-value" id="quiltTones">4</div>
+                            <div class="info-label">Quilt Tones</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-value" id="avgBrightness">-</div>
+                            <div class="info-label">Avg Brightness</div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-grid">
+                        <div class="canvas-wrapper">
+                            <div class="canvas-label">Original Image</div>
+                            <canvas id="originalCanvas"></canvas>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <div class="canvas-label">Quilt Pattern Preview</div>
+                            <canvas id="processedCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        let originalImage = null;
+        let originalImageData = null;
+        let fullSizeImageData = null;
+        let processingTimeout = null;
+        let currentQuiltTones = 4;
+
+        // Initialize
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        
+        const uploadZone = document.getElementById('uploadZone');
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function initializeLiveControls() {
+            const sliders = ['brightness', 'contrast', 'threshold', 'blackPoint', 'whitePoint', 'gamma'];
+            sliders.forEach(slider => {
+                const element = document.getElementById(slider);
+                if (element) {
+                    element.addEventListener('input', (e) => {
+                        const value = slider === 'gamma' ? parseFloat(e.target.value).toFixed(1) : e.target.value;
+                        document.getElementById(slider + 'Value').textContent = value;
+                        debouncedProcess();
+                    });
+                }
+            });
+
+            document.getElementById('conversionMethod').addEventListener('change', () => {
+                if (originalImage) processImage();
+            });
+        }
+
+        function debouncedProcess() {
+            if (!originalImage) return;
+            if (processingTimeout) clearTimeout(processingTimeout);
+            processingTimeout = setTimeout(() => processImage(), 100);
+        }
+
+        function setQuiltTones(tones) {
+            currentQuiltTones = tones;
+            
+            // Update UI
+            document.querySelectorAll('.tone-option').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tone-${tones}`).classList.add('active');
+            document.getElementById('quiltTones').textContent = tones;
+            
+            // Update palette preview
+            updatePalettePreview(tones);
+            
+            // Reprocess image
+            if (originalImage) processImage();
+        }
+
+        function updatePalettePreview(tones) {
+            const preview = document.getElementById('palettePreview');
+            preview.innerHTML = '';
+            
+            for (let i = 0; i < tones; i++) {
+                const value = Math.round((i / (tones - 1)) * 255);
+                const div = document.createElement('div');
+                div.className = 'palette-color';
+                div.style.backgroundColor = `rgb(${value}, ${value}, ${value})`;
+                div.style.color = value > 128 ? '#000' : '#fff';
+                div.textContent = value;
+                preview.appendChild(div);
+            }
+        }
+
+        function handleFileSelect(e) {
+            handleFile(e.target.files[0]);
+        }
+
+        function handleFile(file) {
+            if (!file || !file.type.match('image.*')) {
+                alert('Please select a valid image file');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    loadImage();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        }
+
+        function loadImage() {
+            document.getElementById('uploadZone').style.display = 'none';
+            document.getElementById('canvasContainer').classList.add('active');
+
+            const originalCanvas = document.getElementById('originalCanvas');
+            const ctx = originalCanvas.getContext('2d');
+
+            // Display size
+            const maxWidth = 800;
+            const maxHeight = 600;
+            let displayWidth = originalImage.width;
+            let displayHeight = originalImage.height;
+
+            if (displayWidth > maxWidth || displayHeight > maxHeight) {
+                const ratio = Math.min(maxWidth / displayWidth, maxHeight / displayHeight);
+                displayWidth *= ratio;
+                displayHeight *= ratio;
+            }
+
+            originalCanvas.width = displayWidth;
+            originalCanvas.height = displayHeight;
+
+            ctx.drawImage(originalImage, 0, 0, displayWidth, displayHeight);
+            originalImageData = ctx.getImageData(0, 0, displayWidth, displayHeight);
+
+            // Full size for download
+            const fullCanvas = document.createElement('canvas');
+            fullCanvas.width = originalImage.width;
+            fullCanvas.height = originalImage.height;
+            const fullCtx = fullCanvas.getContext('2d');
+            fullCtx.drawImage(originalImage, 0, 0);
+            fullSizeImageData = fullCtx.getImageData(0, 0, originalImage.width, originalImage.height);
+
+            document.getElementById('imageDimensions').textContent = 
+                `${originalImage.width} × ${originalImage.height}`;
+
+            processImage();
+        }
+
+        function processImage() {
+            if (!originalImageData) return;
+
+            const processedCanvas = document.getElementById('processedCanvas');
+            processedCanvas.width = originalImageData.width;
+            processedCanvas.height = originalImageData.height;
+            const ctx = processedCanvas.getContext('2d');
+
+            const imageData = new ImageData(
+                new Uint8ClampedArray(originalImageData.data),
+                originalImageData.width,
+                originalImageData.height
+            );
+
+            const method = document.getElementById('conversionMethod').value;
+            
+            applyConversionMethod(imageData, method);
+            applyAdjustments(imageData);
+            applyQuiltTones(imageData, currentQuiltTones);
+
+            ctx.putImageData(imageData, 0, 0);
+            updateStatistics(imageData);
+        }
+
+        function applyQuiltTones(imageData, tones) {
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                let value = data[i];
+                
+                // Quantize to specific number of tones
+                const step = 255 / (tones - 1);
+                const level = Math.round(value / step);
+                value = level * step;
+                
+                data[i] = data[i + 1] = data[i + 2] = Math.round(value);
+            }
+        }
+
+        function applyConversionMethod(imageData, method) {
+            const data = imageData.data;
+
+            switch(method) {
+                case 'grayscale':
+                case 'luminosity':
+                    for (let i = 0; i < data.length; i += 4) {
+                        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                        data[i] = data[i + 1] = data[i + 2] = gray;
+                    }
+                    break;
+
+                case 'average':
+                    for (let i = 0; i < data.length; i += 4) {
+                        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        data[i] = data[i + 1] = data[i + 2] = avg;
+                    }
+                    break;
+
+                case 'desaturation':
+                    for (let i = 0; i < data.length; i += 4) {
+                        const max = Math.max(data[i], data[i + 1], data[i + 2]);
+                        const min = Math.min(data[i], data[i + 1], data[i + 2]);
+                        const gray = (max + min) / 2;
+                        data[i] = data[i + 1] = data[i + 2] = gray;
+                    }
+                    break;
+
+                case 'threshold':
+                    const threshold = parseInt(document.getElementById('threshold').value);
+                    for (let i = 0; i < data.length; i += 4) {
+                        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                        const bw = gray > threshold ? 255 : 0;
+                        data[i] = data[i + 1] = data[i + 2] = bw;
+                    }
+                    break;
+
+                case 'floyd':
+                    applyFloydSteinberg(imageData);
+                    break;
+
+                case 'atkinson':
+                    applyAtkinsonDithering(imageData);
+                    break;
+
+                case 'ordered':
+                    applyOrderedDithering(imageData);
+                    break;
+            }
+        }
+
+        function applyAdjustments(imageData) {
+            const data = imageData.data;
+            const brightness = parseInt(document.getElementById('brightness').value);
+            const contrast = parseInt(document.getElementById('contrast').value);
+            const blackPoint = parseInt(document.getElementById('blackPoint').value);
+            const whitePoint = parseInt(document.getElementById('whitePoint').value);
+            const gamma = parseFloat(document.getElementById('gamma').value);
+
+            const contrastFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+            for (let i = 0; i < data.length; i += 4) {
+                let value = data[i];
+
+                value += brightness;
+                value = contrastFactor * (value - 128) + 128;
+
+                if (whitePoint !== blackPoint) {
+                    value = ((value - blackPoint) * 255) / (whitePoint - blackPoint);
+                }
+
+                value = Math.max(0, Math.min(255, value));
+                value = 255 * Math.pow(value / 255, 1 / gamma);
+                value = Math.max(0, Math.min(255, value));
+
+                data[i] = data[i + 1] = data[i + 2] = value;
+            }
+        }
+
+        function applyFloydSteinberg(imageData) {
+            const data = imageData.data;
+            const width = imageData.width;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                data[i] = data[i + 1] = data[i + 2] = gray;
+            }
+
+            for (let i = 0; i < data.length; i += 4) {
+                const oldPixel = data[i];
+                const newPixel = oldPixel < 128 ? 0 : 255;
+                data[i] = data[i + 1] = data[i + 2] = newPixel;
+                const error = oldPixel - newPixel;
+
+                if (i + 4 < data.length) data[i + 4] += error * 7/16;
+                if (i + width * 4 - 4 >= 0) data[i + width * 4 - 4] += error * 3/16;
+                if (i + width * 4 < data.length) data[i + width * 4] += error * 5/16;
+                if (i + width * 4 + 4 < data.length) data[i + width * 4 + 4] += error * 1/16;
+            }
+        }
+
+        function applyAtkinsonDithering(imageData) {
+            const data = imageData.data;
+            const width = imageData.width;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                data[i] = data[i + 1] = data[i + 2] = gray;
+            }
+
+            for (let i = 0; i < data.length; i += 4) {
+                const oldPixel = data[i];
+                const newPixel = oldPixel < 128 ? 0 : 255;
+                data[i] = data[i + 1] = data[i + 2] = newPixel;
+                const error = (oldPixel - newPixel) / 8;
+
+                if (i + 4 < data.length) data[i + 4] += error;
+                if (i + 8 < data.length) data[i + 8] += error;
+                if (i + width * 4 - 4 >= 0) data[i + width * 4 - 4] += error;
+                if (i + width * 4 < data.length) data[i + width * 4] += error;
+                if (i + width * 4 + 4 < data.length) data[i + width * 4 + 4] += error;
+                if (i + width * 8 < data.length) data[i + width * 8] += error;
+            }
+        }
+
+        function applyOrderedDithering(imageData) {
+            const data = imageData.data;
+            const width = imageData.width;
+            const bayerMatrix = [
+                [0, 8, 2, 10],
+                [12, 4, 14, 6],
+                [3, 11, 1, 9],
+                [15, 7, 13, 5]
+            ];
+
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                data[i] = data[i + 1] = data[i + 2] = gray;
+            }
+
+            for (let i = 0; i < data.length; i += 4) {
+                const x = (i / 4) % width;
+                const y = Math.floor(i / 4 / width);
+                const threshold = (bayerMatrix[y % 4][x % 4] / 16) * 255;
+                const value = data[i] > threshold ? 255 : 0;
+                data[i] = data[i + 1] = data[i + 2] = value;
+            }
+        }
+
+        function updateStatistics(imageData) {
+            const data = imageData.data;
+            let totalBrightness = 0;
+            const totalPixels = data.length / 4;
+
+            for (let i = 0; i < data.length; i += 4) {
+                totalBrightness += data[i];
+            }
+
+            const avgBrightness = Math.round(totalBrightness / totalPixels);
+            document.getElementById('avgBrightness').textContent = avgBrightness;
+        }
+
+        function downloadImage() {
+            if (!fullSizeImageData) {
+                alert('No image to download');
+                return;
+            }
+
+            const downloadCanvas = document.createElement('canvas');
+            downloadCanvas.width = originalImage.width;
+            downloadCanvas.height = originalImage.height;
+            const ctx = downloadCanvas.getContext('2d');
+
+            const fullImageData = new ImageData(
+                new Uint8ClampedArray(fullSizeImageData.data),
+                fullSizeImageData.width,
+                fullSizeImageData.height
+            );
+
+            const method = document.getElementById('conversionMethod').value;
+            applyConversionMethod(fullImageData, method);
+            applyAdjustments(fullImageData);
+            applyQuiltTones(fullImageData, currentQuiltTones);
+
+            ctx.putImageData(fullImageData, 0, 0);
+
+            const link = document.createElement('a');
+            link.download = `quilt-pattern-${currentQuiltTones}tones-${Date.now()}.png`;
+            link.href = downloadCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function resetSettings() {
+            document.getElementById('brightness').value = 0;
+            document.getElementById('brightnessValue').textContent = 0;
+            document.getElementById('contrast').value = 0;
+            document.getElementById('contrastValue').textContent = 0;
+            document.getElementById('threshold').value = 128;
+            document.getElementById('thresholdValue').textContent = 128;
+            document.getElementById('blackPoint').value = 0;
+            document.getElementById('blackPointValue').textContent = 0;
+            document.getElementById('whitePoint').value = 255;
+            document.getElementById('whitePointValue').textContent = 255;
+            document.getElementById('gamma').value = 1.0;
+            document.getElementById('gammaValue').textContent = '1.0';
+            document.getElementById('conversionMethod').value = 'luminosity';
+            
+            setQuiltTones(4);
+            
+            if (originalImage) processImage();
+        }
+
+        function resetImage() {
+            document.getElementById('uploadZone').style.display = 'block';
+            document.getElementById('canvasContainer').classList.remove('active');
+            document.getElementById('fileInput').value = '';
+            originalImage = null;
+            originalImageData = null;
+            fullSizeImageData = null;
+            resetSettings();
+        }
+
+        function toggleAdvanced() {
+            const content = document.getElementById('advancedContent');
+            const arrow = document.getElementById('advancedArrow');
+            content.classList.toggle('active');
+            arrow.textContent = content.classList.contains('active') ? '▲' : '▼';
+        }
+
+        function applyPreset(preset) {
+            const presets = {
+                highContrast: { brightness: 0, contrast: 50, blackPoint: 50, whitePoint: 200, gamma: 1.0 },
+                soft: { brightness: 10, contrast: -20, blackPoint: 0, whitePoint: 255, gamma: 1.2 },
+                dramatic: { brightness: -10, contrast: 70, blackPoint: 30, whitePoint: 225, gamma: 0.8 },
+                vintage: { brightness: 5, contrast: 10, blackPoint: 20, whitePoint: 235, gamma: 1.3 }
+            };
+
+            const values = presets[preset];
+            if (!values) return;
+
+            Object.keys(values).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = values[key];
+                    const displayValue = key === 'gamma' ? values[key].toFixed(1) : values[key];
+                    document.getElementById(key + 'Value').textContent = displayValue;
+                }
+            });
+
+            if (originalImage) processImage();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Initialize
+        initializeLiveControls();
+        updatePalettePreview(4);
+    </script>
+</body>
+</html>
